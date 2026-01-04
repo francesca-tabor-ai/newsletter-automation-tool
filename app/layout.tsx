@@ -1,9 +1,10 @@
 import '@/app/globals.css'
 import type { Metadata } from 'next'
+import { ToastProvider } from '@/components/ToastProvider'
 
 export const metadata: Metadata = {
   title: 'AutoNews - Automated Newsletter Creation',
-  description: 'Create and manage automated newsletters from RSS sources',
+  description: 'Turn RSS feeds into ready-to-send newsletters automatically',
 }
 
 export default function RootLayout({
@@ -13,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased bg-background font-sans">
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </body>
     </html>
   )
 }

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getUserOrganizations } from '@/app/actions/organizations'
 import SignOutButton from '@/components/auth/SignOutButton'
+import Link from 'next/link'
 
 export default async function AppLayout({
   children,
@@ -18,16 +18,23 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* App Shell */}
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background">
+      {/* App Navigation */}
+      <header className="bg-surface border-b border-slate-100">
+        <div className="max-w-content mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <span className="text-xl font-bold text-blue-600">AutoNews</span>
+            <div className="flex items-center gap-6">
+              <Link href="/app" className="text-h3 font-bold text-slate-600 hover:text-coral-500 transition-colors">
+                AutoNews
+              </Link>
+              <nav className="hidden md:flex items-center gap-4">
+                <Link href="/app" className="text-body text-slate-400 hover:text-slate-600 transition-colors">
+                  Dashboard
+                </Link>
+              </nav>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user.email}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-small text-slate-400">{user.email}</span>
               <SignOutButton />
             </div>
           </div>
