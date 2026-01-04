@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import NewsletterEditForm from './NewsletterEditForm'
 import SourcesTab from './SourcesTab'
+import RulesTab from './RulesTab'
+import IssuesTab from './IssuesTab'
 
 interface Newsletter {
   id: string
@@ -30,11 +32,32 @@ interface Source {
   }
 }
 
+interface Rules {
+  id?: string
+  include_keywords: string[]
+  exclude_keywords: string[]
+  max_items: number
+  lookback_days: number
+  dedupe: boolean
+}
+
+interface Issue {
+  id: string
+  title: string
+  status: string
+  scheduled_for: string | null
+  sent_at: string | null
+  created_at: string
+  itemCount: number
+}
+
 interface NewsletterTabsProps {
   orgId: string
   newsletterId: string
   newsletter: Newsletter
   sources: Source[]
+  rules: Rules | null
+  issues: Issue[]
   currentTab: string
 }
 
@@ -43,6 +66,8 @@ export default function NewsletterTabs({
   newsletterId,
   newsletter,
   sources,
+  rules,
+  issues,
   currentTab,
 }: NewsletterTabsProps) {
   const pathname = usePathname()
@@ -50,8 +75,9 @@ export default function NewsletterTabs({
   const tabs = [
     { id: 'settings', name: 'Settings', icon: '⚙️' },
     { id: 'sources', name: 'Sources', icon: '📡', count: sources.length },
+    { id: 'rules', name: 'Rules', icon: '🎯' },
+    { id: 'issues', name: 'Issues', icon: '📰', count: issues.length },
     { id: 'subscribers', name: 'Subscribers', icon: '👥', disabled: true },
-    { id: 'issues', name: 'Issues', icon: '📰', disabled: true },
     { id: 'analytics', name: 'Analytics', icon: '📊', disabled: true },
   ]
 
@@ -122,21 +148,23 @@ export default function NewsletterTabs({
           />
         )}
 
+        {currentTab === 'rules' && (
+          <RulesTab orgId={orgId} newsletterId={newsletterId} rules={rules} />
+        )}
+
+        {currentTab === 'issues' && (
+          <IssuesTab
+            orgId={orgId}
+            newsletterId={newsletterId}
+            issues={issues}
+          />
+        )}
+
         {currentTab === 'subscribers' && (
           <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
             <div className="text-4xl mb-4">👥</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Subscriber Management
-            </h3>
-            <p className="text-gray-600">Coming soon</p>
-          </div>
-        )}
-
-        {currentTab === 'issues' && (
-          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-            <div className="text-4xl mb-4">📰</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Issue Management
             </h3>
             <p className="text-gray-600">Coming soon</p>
           </div>

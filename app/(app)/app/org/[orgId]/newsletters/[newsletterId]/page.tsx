@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { getNewsletter } from '@/app/actions/newsletters'
 import { getOrganization } from '@/app/actions/organizations'
 import { getNewsletterSources } from '@/app/actions/sources'
+import { getNewsletterRules } from '@/app/actions/rules'
+import { getNewsletterIssues } from '@/app/actions/issues'
 import NewsletterTabs from './NewsletterTabs'
 import NewsletterHeader from './NewsletterHeader'
 
@@ -16,10 +18,12 @@ export default async function NewsletterDetailPage({
   const { orgId, newsletterId } = await params
   const { tab } = await searchParams
   
-  const [org, newsletter, sources] = await Promise.all([
+  const [org, newsletter, sources, rules, issues] = await Promise.all([
     getOrganization(orgId),
     getNewsletter(newsletterId),
     getNewsletterSources(orgId, newsletterId),
+    getNewsletterRules(orgId, newsletterId),
+    getNewsletterIssues(orgId, newsletterId),
   ])
 
   if (!org || !newsletter) {
@@ -69,6 +73,8 @@ export default async function NewsletterDetailPage({
         newsletterId={newsletterId}
         newsletter={newsletter}
         sources={sources}
+        rules={rules}
+        issues={issues}
         currentTab={currentTab}
       />
     </div>
