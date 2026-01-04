@@ -11,6 +11,7 @@
     "ingest": "curl -X POST http://localhost:3000/api/ingest/rss"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
     "@hello-pangea/dnd": "^18.0.1",
     "@heroicons/react": "^2.2.0",
     "@sendgrid/mail": "^8.1.6",
