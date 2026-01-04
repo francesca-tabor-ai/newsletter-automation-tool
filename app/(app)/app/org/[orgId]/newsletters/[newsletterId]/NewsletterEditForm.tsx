@@ -11,6 +11,10 @@ interface Newsletter {
   from_email: string | null
   reply_to: string | null
   subject_template: string | null
+  schedule_enabled: boolean | null
+  schedule_days: number[] | null
+  schedule_time: string | null
+  schedule_timezone: string | null
 }
 
 interface NewsletterEditFormProps {
@@ -37,6 +41,10 @@ export default function NewsletterEditForm({
   const updateNewsletterWithId = updateNewsletter.bind(null, newsletter.id)
   const [state, formAction] = useFormState(updateNewsletterWithId, null)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [scheduleEnabled, setScheduleEnabled] = useState(newsletter.schedule_enabled || false)
+  const [selectedDays, setSelectedDays] = useState<number[]>(
+    newsletter.schedule_days || [1, 2, 3, 4, 5]
+  )
 
   // Show success message
   useEffect(() => {
@@ -46,6 +54,35 @@ export default function NewsletterEditForm({
       return () => clearTimeout(timer)
     }
   }, [state])
+
+  const toggleDay = (day: number) => {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
+    )
+  }
+
+  const daysOfWeek = [
+    { value: 0, label: 'Sun' },
+    { value: 1, label: 'Mon' },
+    { value: 2, label: 'Tue' },
+    { value: 3, label: 'Wed' },
+    { value: 4, label: 'Thu' },
+    { value: 5, label: 'Fri' },
+    { value: 6, label: 'Sat' },
+  ]
+
+  const timezones = [
+    'UTC',
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'Europe/London',
+    'Europe/Paris',
+    'Asia/Tokyo',
+    'Asia/Shanghai',
+    'Australia/Sydney',
+  ]
 
   return (
     <form action={formAction} className="px-6 py-6">
@@ -159,6 +196,122 @@ export default function NewsletterEditForm({
             Template for email subjects. Use variables like {'{'}
             {'{'}date{'}'}{'}'}
           </p>
+        </div>
+
+        {/* Scheduling Section */}
+        <div className="pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">
+                Automated Scheduling
+              </h3>
+              <p className="text-sm text-gray-500">
+                Automatically generate and send issues on a schedule
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="scheduleEnabled"
+                checked={scheduleEnabled}
+                onChange={(e) => setScheduleEnabled(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          {scheduleEnabled && (
+            <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+              {/* Days of Week */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Days of Week *
+                </label>
+                <div className="flex gap-2">
+                  {daysOfWeek.map((day) => (
+                    <button
+                      key={day.value}
+                      type="button"
+                      onClick={() => toggleDay(day.value)}
+                      className={`
+                        px-3 py-2 text-sm font-medium rounded-md transition-colors
+                        ${
+                          selectedDays.includes(day.value)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      {day.label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="hidden"
+                  name="scheduleDays"
+                  value={JSON.stringify(selectedDays)}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Select which days to generate issues
+                </p>
+              </div>
+
+              {/* Time */}
+              <div>
+                <label
+                  htmlFor="scheduleTime"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Time of Day *
+                </label>
+                <input
+                  type="time"
+                  id="scheduleTime"
+                  name="scheduleTime"
+                  defaultValue={newsletter.schedule_time || '09:00'}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  What time to generate and send issues (24-hour format)
+                </p>
+              </div>
+
+              {/* Timezone */}
+              <div>
+                <label
+                  htmlFor="scheduleTimezone"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Timezone *
+                </label>
+                <select
+                  id="scheduleTimezone"
+                  name="scheduleTimezone"
+                  defaultValue={newsletter.schedule_timezone || 'UTC'}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {timezones.map((tz) => (
+                    <option key={tz} value={tz}>
+                      {tz}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Timezone for scheduling
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                <p className="text-xs text-blue-800">
+                  <strong>How it works:</strong> On the selected days at the specified
+                  time, the system will automatically generate a new draft issue with
+                  recent items. If there are no eligible items, the issue will be marked
+                  as skipped. The issue will then be sent immediately.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

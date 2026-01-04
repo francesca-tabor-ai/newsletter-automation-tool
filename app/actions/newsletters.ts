@@ -185,6 +185,10 @@ export async function updateNewsletter(
   const fromEmail = formData.get('fromEmail') as string
   const replyTo = formData.get('replyTo') as string
   const subjectTemplate = formData.get('subjectTemplate') as string
+  const scheduleEnabled = formData.get('scheduleEnabled') === 'on'
+  const scheduleDaysRaw = formData.get('scheduleDays') as string
+  const scheduleTime = formData.get('scheduleTime') as string
+  const scheduleTimezone = formData.get('scheduleTimezone') as string
 
   // Validation
   if (!name || name.trim().length === 0) {
@@ -193,6 +197,16 @@ export async function updateNewsletter(
 
   if (!fromName || fromName.trim().length === 0) {
     return { error: 'From name is required' }
+  }
+
+  // Parse schedule days
+  let scheduleDays = [1, 2, 3, 4, 5] // Default: weekdays
+  if (scheduleDaysRaw) {
+    try {
+      scheduleDays = JSON.parse(scheduleDaysRaw)
+    } catch {
+      // Keep default
+    }
   }
 
   // Generate new slug if name changed
@@ -206,6 +220,29 @@ export async function updateNewsletter(
           .replace(/^-+|-+$/g, '')
       : newsletter.slug
 
+  // Calculate next run if scheduling is enabled
+  let nextScheduledRun = null
+  if (scheduleEnabled && scheduleTime) {
+    const now = new Date()
+    const [hours, minutes] = scheduleTime.split(':').map(Number)
+    const nextRun = new Date(now)
+    nextRun.setHours(hours, minutes, 0, 0)
+    
+    // If today's time has passed, start from tomorrow
+    if (nextRun <= now) {
+      nextRun.setDate(nextRun.getDate() + 1)
+    }
+    
+    // Find next day that matches schedule
+    let attempts = 0
+    while (!scheduleDays.includes(nextRun.getDay()) && attempts < 7) {
+      nextRun.setDate(nextRun.getDate() + 1)
+      attempts++
+    }
+    
+    nextScheduledRun = nextRun.toISOString()
+  }
+
   // Update the newsletter
   const { error } = await supabase
     .from('newsletters')
@@ -216,6 +253,11 @@ export async function updateNewsletter(
       from_email: fromEmail?.trim() || null,
       reply_to: replyTo?.trim() || null,
       subject_template: subjectTemplate?.trim() || null,
+      schedule_enabled: scheduleEnabled,
+      schedule_days: scheduleDays,
+      schedule_time: scheduleTime || '09:00:00',
+      schedule_timezone: scheduleTimezone || 'UTC',
+      next_scheduled_run: nextScheduledRun,
     })
     .eq('id', newsletterId)
 
