@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { canEdit, canRead, isOwner, getPermissionError } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
 /**
@@ -27,13 +28,12 @@ async function checkOrgMembership(orgId: string): Promise<boolean> {
  * Create a new newsletter
  */
 export async function createNewsletter(orgId: string, formData: FormData) {
-  const supabase = await createClient()
-
-  // Check authorization
-  const isMember = await checkOrgMembership(orgId)
-  if (!isMember) {
-    return { error: 'Unauthorized: You must be a member of this organization' }
+  // Check permissions: editor or owner can create newsletters
+  if (!(await canEdit(orgId))) {
+    return { error: getPermissionError('editor') }
   }
+
+  const supabase = await createClient()
 
   const name = formData.get('name') as string
   const fromName = formData.get('fromName') as string
@@ -180,6 +180,11 @@ export async function updateNewsletter(
     return { error: 'Newsletter not found or unauthorized' }
   }
 
+  // Check permissions: editor or owner can update newsletters
+  if (!(await canEdit(newsletter.org_id))) {
+    return { error: getPermissionError('editor') }
+  }
+
   const name = formData.get('name') as string
   const fromName = formData.get('fromName') as string
   const fromEmail = formData.get('fromEmail') as string
@@ -311,6 +316,11 @@ export async function deleteNewsletter(newsletterId: string) {
   const newsletter = await getNewsletter(newsletterId)
   if (!newsletter) {
     return { error: 'Newsletter not found or unauthorized' }
+  }
+
+  // Check permissions: only owners can delete newsletters
+  if (!(await isOwner(newsletter.org_id))) {
+    return { error: getPermissionError('owner') }
   }
 
   // Delete the newsletter
