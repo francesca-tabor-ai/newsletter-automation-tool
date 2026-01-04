@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getUserOrganizations } from '@/app/actions/organizations'
 import SignOutButton from '@/components/auth/SignOutButton'
 
 export default async function AppLayout({
@@ -36,4 +37,3 @@ export default async function AppLayout({
     </div>
   )
 }
-
