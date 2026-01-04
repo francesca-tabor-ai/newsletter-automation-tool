@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import SignOutButton from '@/components/auth/SignOutButton'
 
 export default async function AppLayout({
   children,
@@ -26,6 +27,7 @@ export default async function AppLayout({
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">{user.email}</span>
+              <SignOutButton />
             </div>
           </div>
         </div>
