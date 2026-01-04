@@ -1,2 +1,73 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Custom base styles */
+@layer base {
+  :root {
+    --coral-50: #FFF5F3;
+    --coral-500: #FF6B4A;
+    --coral-600: #E85A3E;
+    --slate-50: #F7FAFC;
+    --slate-100: #E6ECF1;
+    --slate-300: #A8B5C3;
+    --slate-400: #7C8FA1;
+    --slate-500: #4A5B6A;
+    --slate-600: #253645;
+    --background: #F7FAFC;
+    --surface: #FFFFFF;
+  }
+
+  body {
+    @apply bg-background text-slate-500;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-slate-600;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply h-[48px] px-4 rounded-lg bg-coral-500 hover:bg-coral-600 text-white font-medium shadow-button transition-colors inline-flex items-center justify-center;
+  }
+
+  .btn-secondary {
+    @apply h-[48px] px-4 rounded-lg bg-surface hover:bg-slate-50 text-slate-600 font-medium border border-slate-100 shadow-button transition-colors inline-flex items-center justify-center;
+  }
+
+  .btn-tertiary {
+    @apply text-coral-500 hover:text-coral-600 font-medium transition-colors;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-surface border border-slate-100 rounded-xl p-4 shadow-card transition-shadow;
+  }
+
+  .card-hover {
+    @apply hover:shadow-card-hover;
+  }
+
+  /* Inputs */
+  .input {
+    @apply h-[44px] px-3 w-full bg-surface border border-slate-100 rounded-lg text-body text-slate-600 placeholder:text-slate-300 focus:border-coral-500 focus:ring-0 focus:shadow-input-focus transition-all;
+  }
+
+  .textarea {
+    @apply p-3 w-full bg-surface border border-slate-100 rounded-lg text-body text-slate-600 placeholder:text-slate-300 focus:border-coral-500 focus:ring-0 focus:shadow-input-focus transition-all;
+  }
+
+  .select {
+    @apply h-[44px] px-3 w-full bg-surface border border-slate-100 rounded-lg text-body text-slate-600 focus:border-coral-500 focus:ring-0 focus:shadow-input-focus transition-all;
+  }
+}
+
+/* Utility overrides */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
