@@ -321,3 +321,224 @@ export async function deleteIssue(
   return { success: true }
 }
 
+/**
+ * Get issue details with items
+ */
+export async function getIssueWithItems(
+  orgId: string,
+  newsletterId: string,
+  issueId: string
+) {
+  const supabase = await createClient()
+  const adminClient = createAdminClient()
+
+  // Check authorization
+  const hasAccess = await checkOrgAccess(orgId)
+  if (!hasAccess) {
+    return null
+  }
+
+  // Get issue
+  const { data: issue, error: issueError } = await supabase
+    .from('issues')
+    .select('*')
+    .eq('id', issueId)
+    .eq('newsletter_id', newsletterId)
+    .single()
+
+  if (issueError || !issue) {
+    console.error('Error fetching issue:', issueError)
+    return null
+  }
+
+  // Get issue items with full item data
+  const { data: issueItems, error: itemsError } = await adminClient
+    .from('issue_items')
+    .select(
+      `
+      id,
+      position,
+      removed,
+      custom_title,
+      custom_summary,
+      items (
+        id,
+        title,
+        url,
+        canonical_url,
+        author,
+        published_at,
+        summary,
+        content_text,
+        content_html,
+        image_url,
+        sources (
+          id,
+          name,
+          url
+        )
+      )
+    `
+    )
+    .eq('issue_id', issueId)
+    .order('position', { ascending: true })
+
+  if (itemsError) {
+    console.error('Error fetching issue items:', itemsError)
+    return { ...issue, items: [] }
+  }
+
+  return {
+    ...issue,
+    items: issueItems || [],
+  }
+}
+
+/**
+ * Freeze issue (mark as frozen when opening editor)
+ */
+export async function freezeIssue(
+  orgId: string,
+  newsletterId: string,
+  issueId: string
+) {
+  const supabase = await createClient()
+
+  // Check authorization
+  const hasAccess = await checkOrgAccess(orgId)
+  if (!hasAccess) {
+    return { error: 'Unauthorized' }
+  }
+
+  // Check issue status
+  const { data: issue } = await supabase
+    .from('issues')
+    .select('status')
+    .eq('id', issueId)
+    .single()
+
+  if (!issue) {
+    return { error: 'Issue not found' }
+  }
+
+  // Only freeze if draft
+  if (issue.status !== 'draft') {
+    return { success: true } // Already frozen or beyond
+  }
+
+  const { error } = await supabase
+    .from('issues')
+    .update({ status: 'frozen' })
+    .eq('id', issueId)
+
+  if (error) {
+    console.error('Error freezing issue:', error)
+    return { error: 'Failed to freeze issue' }
+  }
+
+  revalidatePath(`/app/org/${orgId}/newsletters/${newsletterId}/issues/${issueId}`)
+  return { success: true }
+}
+
+/**
+ * Update issue intro
+ */
+export async function updateIssueIntro(
+  orgId: string,
+  newsletterId: string,
+  issueId: string,
+  introMd: string
+) {
+  const supabase = await createClient()
+
+  // Check authorization
+  const hasAccess = await checkOrgAccess(orgId)
+  if (!hasAccess) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await supabase
+    .from('issues')
+    .update({ intro_md: introMd })
+    .eq('id', issueId)
+
+  if (error) {
+    console.error('Error updating intro:', error)
+    return { error: 'Failed to update intro' }
+  }
+
+  revalidatePath(`/app/org/${orgId}/newsletters/${newsletterId}/issues/${issueId}`)
+  return { success: true }
+}
+
+/**
+ * Update issue item
+ */
+export async function updateIssueItem(
+  orgId: string,
+  issueItemId: string,
+  data: {
+    custom_title?: string | null
+    custom_summary?: string | null
+    removed?: boolean
+  }
+) {
+  const supabase = await createClient()
+
+  // Check authorization
+  const hasAccess = await checkOrgAccess(orgId)
+  if (!hasAccess) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await supabase
+    .from('issue_items')
+    .update(data)
+    .eq('id', issueItemId)
+
+  if (error) {
+    console.error('Error updating issue item:', error)
+    return { error: 'Failed to update item' }
+  }
+
+  return { success: true }
+}
+
+/**
+ * Reorder issue items
+ */
+export async function reorderIssueItems(
+  orgId: string,
+  newsletterId: string,
+  issueId: string,
+  itemIds: string[]
+) {
+  const supabase = await createClient()
+
+  // Check authorization
+  const hasAccess = await checkOrgAccess(orgId)
+  if (!hasAccess) {
+    return { error: 'Unauthorized' }
+  }
+
+  // Update positions
+  const updates = itemIds.map((id, index) =>
+    supabase
+      .from('issue_items')
+      .update({ position: index })
+      .eq('id', id)
+      .eq('issue_id', issueId)
+  )
+
+  const results = await Promise.all(updates)
+  const errors = results.filter((r) => r.error)
+
+  if (errors.length > 0) {
+    console.error('Error reordering items:', errors)
+    return { error: 'Failed to reorder some items' }
+  }
+
+  revalidatePath(`/app/org/${orgId}/newsletters/${newsletterId}/issues/${issueId}`)
+  return { success: true }
+}
+
