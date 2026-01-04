@@ -6,6 +6,7 @@ import NewsletterEditForm from './NewsletterEditForm'
 import SourcesTab from './SourcesTab'
 import RulesTab from './RulesTab'
 import IssuesTab from './IssuesTab'
+import RecipientsTab from './RecipientsTab'
 
 interface Newsletter {
   id: string
@@ -51,6 +52,25 @@ interface Issue {
   itemCount: number
 }
 
+interface Subscriber {
+  id: string
+  email: string
+  status: string
+  first_name: string | null
+  last_name: string | null
+  subscribed_at: string
+  unsubscribed_at: string | null
+  created_at: string
+}
+
+interface SubscriberStats {
+  total: number
+  active: number
+  unsubscribed: number
+  bounced: number
+  complained: number
+}
+
 interface NewsletterTabsProps {
   orgId: string
   newsletterId: string
@@ -58,6 +78,8 @@ interface NewsletterTabsProps {
   sources: Source[]
   rules: Rules | null
   issues: Issue[]
+  subscribers: Subscriber[]
+  subscriberStats: SubscriberStats
   currentTab: string
 }
 
@@ -68,6 +90,8 @@ export default function NewsletterTabs({
   sources,
   rules,
   issues,
+  subscribers,
+  subscriberStats,
   currentTab,
 }: NewsletterTabsProps) {
   const pathname = usePathname()
@@ -77,7 +101,7 @@ export default function NewsletterTabs({
     { id: 'sources', name: 'Sources', icon: '📡', count: sources.length },
     { id: 'rules', name: 'Rules', icon: '🎯' },
     { id: 'issues', name: 'Issues', icon: '📰', count: issues.length },
-    { id: 'subscribers', name: 'Subscribers', icon: '👥', disabled: true },
+    { id: 'recipients', name: 'Recipients', icon: '👥', count: subscriberStats.active },
     { id: 'analytics', name: 'Analytics', icon: '📊', disabled: true },
   ]
 
@@ -160,14 +184,13 @@ export default function NewsletterTabs({
           />
         )}
 
-        {currentTab === 'subscribers' && (
-          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-            <div className="text-4xl mb-4">👥</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Subscriber Management
-            </h3>
-            <p className="text-gray-600">Coming soon</p>
-          </div>
+        {currentTab === 'recipients' && (
+          <RecipientsTab
+            orgId={orgId}
+            newsletterId={newsletterId}
+            subscribers={subscribers}
+            stats={subscriberStats}
+          />
         )}
 
         {currentTab === 'analytics' && (
