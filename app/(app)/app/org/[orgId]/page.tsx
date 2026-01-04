@@ -31,7 +31,19 @@ export default async function OrgDashboardPage({
       {/* Newsletters Section */}
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="px-6 py-4 border-b flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">Newsletters</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Newsletters
+            </h2>
+            {newsletters.length > 0 && (
+              <Link
+                href={`/app/org/${orgId}/newsletters`}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                View All →
+              </Link>
+            )}
+          </div>
           <CreateNewsletterButton orgId={orgId} />
         </div>
 
@@ -98,9 +110,12 @@ export default async function OrgDashboardPage({
                       {new Date(newsletter.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  <button className="ml-4 text-sm font-medium text-blue-600 hover:text-blue-700">
+                  <Link
+                    href={`/app/org/${orgId}/newsletters/${newsletter.id}`}
+                    className="ml-4 text-sm font-medium text-blue-600 hover:text-blue-700"
+                  >
                     Manage
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}
