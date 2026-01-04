@@ -7,6 +7,7 @@ import SourcesTab from './SourcesTab'
 import RulesTab from './RulesTab'
 import IssuesTab from './IssuesTab'
 import RecipientsTab from './RecipientsTab'
+import AnalyticsTab from './AnalyticsTab'
 
 interface Newsletter {
   id: string
@@ -71,6 +72,22 @@ interface SubscriberStats {
   complained: number
 }
 
+interface IssueStats {
+  id: string
+  title: string
+  sent_at: string
+  sent: number
+  opens: number
+  clicks: number
+  open_rate: number
+  click_rate: number
+}
+
+interface TopUrl {
+  url: string
+  count: number
+}
+
 interface NewsletterTabsProps {
   orgId: string
   newsletterId: string
@@ -80,6 +97,8 @@ interface NewsletterTabsProps {
   issues: Issue[]
   subscribers: Subscriber[]
   subscriberStats: SubscriberStats
+  analyticsIssues: IssueStats[]
+  topUrls: TopUrl[]
   currentTab: string
 }
 
@@ -92,6 +111,8 @@ export default function NewsletterTabs({
   issues,
   subscribers,
   subscriberStats,
+  analyticsIssues,
+  topUrls,
   currentTab,
 }: NewsletterTabsProps) {
   const pathname = usePathname()
@@ -102,7 +123,7 @@ export default function NewsletterTabs({
     { id: 'rules', name: 'Rules', icon: '🎯' },
     { id: 'issues', name: 'Issues', icon: '📰', count: issues.length },
     { id: 'recipients', name: 'Recipients', icon: '👥', count: subscriberStats.active },
-    { id: 'analytics', name: 'Analytics', icon: '📊', disabled: true },
+    { id: 'analytics', name: 'Analytics', icon: '📊' },
   ]
 
   return (
@@ -194,13 +215,12 @@ export default function NewsletterTabs({
         )}
 
         {currentTab === 'analytics' && (
-          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-            <div className="text-4xl mb-4">📊</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Analytics Dashboard
-            </h3>
-            <p className="text-gray-600">Coming soon</p>
-          </div>
+          <AnalyticsTab
+            orgId={orgId}
+            newsletterId={newsletterId}
+            issues={analyticsIssues}
+            topUrls={topUrls}
+          />
         )}
       </div>
     </div>

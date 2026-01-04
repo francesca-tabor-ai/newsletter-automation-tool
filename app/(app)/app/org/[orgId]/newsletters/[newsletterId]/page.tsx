@@ -6,6 +6,7 @@ import { getNewsletterSources } from '@/app/actions/sources'
 import { getNewsletterRules } from '@/app/actions/rules'
 import { getNewsletterIssues } from '@/app/actions/issues'
 import { getNewsletterSubscribers, getSubscriberStats } from '@/app/actions/subscribers'
+import { getNewsletterAnalytics } from '@/app/actions/analytics'
 import NewsletterTabs from './NewsletterTabs'
 import NewsletterHeader from './NewsletterHeader'
 
@@ -19,7 +20,7 @@ export default async function NewsletterDetailPage({
   const { orgId, newsletterId } = await params
   const { tab } = await searchParams
   
-  const [org, newsletter, sources, rules, issues, subscribers, subscriberStats] = await Promise.all([
+  const [org, newsletter, sources, rules, issues, subscribers, subscriberStats, analytics] = await Promise.all([
     getOrganization(orgId),
     getNewsletter(newsletterId),
     getNewsletterSources(orgId, newsletterId),
@@ -27,6 +28,7 @@ export default async function NewsletterDetailPage({
     getNewsletterIssues(orgId, newsletterId),
     getNewsletterSubscribers(orgId, newsletterId),
     getSubscriberStats(orgId, newsletterId),
+    getNewsletterAnalytics(orgId, newsletterId),
   ])
 
   if (!org || !newsletter) {
@@ -80,6 +82,8 @@ export default async function NewsletterDetailPage({
         issues={issues}
         subscribers={subscribers}
         subscriberStats={subscriberStats}
+        analyticsIssues={analytics.issues}
+        topUrls={analytics.topUrls}
         currentTab={currentTab}
       />
     </div>
