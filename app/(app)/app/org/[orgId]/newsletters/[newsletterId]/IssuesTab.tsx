@@ -29,6 +29,8 @@ export default function IssuesTab({
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [sendingId, setSendingId] = useState<string | null>(null)
+  const [sendError, setSendError] = useState<string | null>(null)
   const router = useRouter()
 
   const handleGenerateDraft = async () => {
@@ -58,6 +60,42 @@ export default function IssuesTab({
     await deleteIssue(orgId, newsletterId, issueId)
     setDeletingId(null)
     router.refresh()
+  }
+
+  const handleSend = async (issueId: string) => {
+    if (!confirm('Are you sure you want to send this issue to all active subscribers? This action cannot be undone.')) {
+      return
+    }
+
+    setSendingId(issueId)
+    setSendError(null)
+
+    try {
+      const response = await fetch('/api/send/issue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          issueId,
+          orgId,
+          newsletterId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        alert(`Issue sent successfully!\nSent: ${data.stats.sent}\nFailed: ${data.stats.failed}`)
+        router.refresh()
+      } else {
+        setSendError(data.error || 'Failed to send issue')
+      }
+    } catch (err: any) {
+      setSendError(err.message || 'An unexpected error occurred')
+    } finally {
+      setSendingId(null)
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -117,6 +155,13 @@ export default function IssuesTab({
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           {error}
+        </div>
+      )}
+
+      {/* Send Error Message */}
+      {sendError && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {sendError}
         </div>
       )}
 
@@ -206,8 +251,17 @@ export default function IssuesTab({
                       href={`/app/org/${orgId}/newsletters/${newsletterId}/issues/${issue.id}`}
                       className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 font-medium transition-colors"
                     >
-                      {issue.status === 'draft' ? 'Edit' : 'View'}
+                      {issue.status === 'draft' || issue.status === 'frozen' ? 'Edit' : 'View'}
                     </Link>
+                    {(issue.status === 'frozen' || issue.status === 'draft') && (
+                      <button
+                        onClick={() => handleSend(issue.id)}
+                        disabled={sendingId === issue.id}
+                        className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium transition-colors disabled:opacity-50"
+                      >
+                        {sendingId === issue.id ? 'Sending...' : 'Send Now'}
+                      </button>
+                    )}
                     {issue.status === 'draft' && (
                       <button
                         onClick={() => handleDelete(issue.id)}
