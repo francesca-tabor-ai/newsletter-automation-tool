@@ -14,7 +14,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "@supabase/supabase-js": "^2.39.7",
-    "@supabase/ssr": "^0.1.0"
+    "@supabase/ssr": "^0.1.0",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
@@ -29,4 +30,3 @@
     "prettier": "^3.2.4"
   }
 }
-
